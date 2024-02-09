@@ -1,3 +1,7 @@
+// pratik.m@cloudannotation.com
+// 8669690202
+// 123123
+
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -15,7 +19,6 @@ import 'ui_designs/home_tab/products_catalogue/product_category_page.dart';
 import 'util/session_manager.dart';
 import 'util/size_config.dart';
 import 'widget/video_player.dart';
-
 
 FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -41,13 +44,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   @override
   void initState() {
     super.initState();
     Get.put(LocationController());
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +58,7 @@ class _MyAppState extends State<MyApp> {
         '/dashboard': (context) => const DashBoardPage(),
         '/expense_list': (context) => const MyExpenseList(),
         '/product_list': (context) => const ProductCategoryPage(),
-        '/dcr' :(context) => const DCRListPage(),
+        '/dcr': (context) => const DCRListPage(),
       },
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
@@ -66,8 +67,7 @@ class _MyAppState extends State<MyApp> {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         //Default Color Declared here
 
-        primarySwatch: MaterialColor(
-            Constants.primaryColor.value, const {
+        primarySwatch: MaterialColor(Constants.primaryColor.value, const {
           50: Constants.primaryColor,
           100: Constants.primaryColor,
           200: Constants.primaryColor,
@@ -106,4 +106,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

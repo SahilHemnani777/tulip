@@ -33,7 +33,7 @@ class CustomerListPageState extends State<CustomerListPage> {
   DateTime? toDate;
 
   final PagingController<int, CustomerListItem> _pagingController =
-  PagingController(firstPageKey: 1);
+      PagingController(firstPageKey: 1);
   bool _isInternetConnected = true;
   StreamSubscription? _subscription;
   List<dynamic>? _filterData;
@@ -48,7 +48,7 @@ class CustomerListPageState extends State<CustomerListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Customers',implyStatus: true),
+      appBar: const CustomAppBar(title: 'Customers', implyStatus: true),
       body: GestureDetector(
         onTap: () {
           _showFilter = false;
@@ -65,7 +65,7 @@ class CustomerListPageState extends State<CustomerListPage> {
                   margin: EdgeInsets.symmetric(horizontal: 6.w),
                   child: CommonSearchBar(
                     title: 'Search Customer',
-                    searchButtonCallback:openSearchDelegate,
+                    searchButtonCallback: openSearchDelegate,
                     filterButtonCallback: () {
                       _showFilter = !_showFilter;
                       setState(() {});
@@ -75,17 +75,17 @@ class CustomerListPageState extends State<CustomerListPage> {
                 const SizedBox(height: 5),
                 _isInternetConnected
                     ? Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () {
-                      _pagingController.refresh();
-                      return Future.delayed(const Duration(seconds: 1));
-                    },
-                    child: _getPaginatedListViewWidget(),
-                  ),
-                )
+                        child: RefreshIndicator(
+                          onRefresh: () {
+                            _pagingController.refresh();
+                            return Future.delayed(const Duration(seconds: 1));
+                          },
+                          child: _getPaginatedListViewWidget(),
+                        ),
+                      )
                     : SizedBox(
-                    height: 70.h,
-                    child: const Center(child: NoInternetWidget())),
+                        height: 70.h,
+                        child: const Center(child: NoInternetWidget())),
               ],
             ),
             if (_showFilter)
@@ -94,20 +94,25 @@ class CustomerListPageState extends State<CustomerListPage> {
                 height: double.infinity,
                 width: double.infinity,
               ),
-            if (_showFilter) CustomerFilter(updateFilterVisibilityCallback: (bool ) {
-              _showFilter=bool;
-              setState(() {
-
-              });
-            }, applyFilterCallback:  applyFilter),
+            if (_showFilter)
+              CustomerFilter(
+                  updateFilterVisibilityCallback: (bool) {
+                    _showFilter = bool;
+                    setState(() {});
+                  },
+                  applyFilterCallback: applyFilter),
           ],
         ),
       ),
       floatingActionButton: GestureDetector(
         onTap: () async {
-          var result = await Get.to(transition: Transition.fade, CreateCustomerPage(fromCreate: true,));
+          var result = await Get.to(
+              transition: Transition.fade,
+              const CreateCustomerPage(
+                fromCreate: true,
+              ));
           print("result is $result");
-          if (result!=null && true){
+          if (result != null && true) {
             _pagingController.refresh();
           }
         },
@@ -125,48 +130,48 @@ class CustomerListPageState extends State<CustomerListPage> {
     );
   }
 
-
   Widget _getPaginatedListViewWidget() => PagedListView<int, CustomerListItem>(
-    shrinkWrap: true,
-    pagingController: _pagingController,
-    padding: EdgeInsets.only(bottom: 10.h),
-    builderDelegate: PagedChildBuilderDelegate<CustomerListItem>(
-      itemBuilder: (context, item, index) {
-        return InkWell(
-            onTap: () async {
-              var result = await Get.to(CustomerDetailsPage(customerId: item.id,),
-                  transition: Transition.fade
-              );
-              print("result is $result");
-              if (result!=null && true){
-                _pagingController.refresh();
-              }
-            },
-            child: CustomerListDetailsWidget(customerListItem: item));
-      },
-      noItemsFoundIndicatorBuilder: (context) => SizedBox(
-        width: 100.w,
-        height: 70.h,
-        child: const Center(
-          child: NoDataFound(
-            title: "No Data Found",
-            image: "assets/error_image/no_data.png",
-          ),
-        ),
-      ),
-      firstPageErrorIndicatorBuilder: (context) => SizedBox(
-          height: 70.h,
-          child: const Center(
-            child: NoDataFound(
-              title: "Something went wrong",
-              image: "assets/error_image/error.png",
+        shrinkWrap: true,
+        pagingController: _pagingController,
+        padding: EdgeInsets.only(bottom: 10.h),
+        builderDelegate: PagedChildBuilderDelegate<CustomerListItem>(
+          itemBuilder: (context, item, index) {
+            return InkWell(
+                onTap: () async {
+                  var result = await Get.to(
+                      CustomerDetailsPage(
+                        customerId: item.id,
+                      ),
+                      transition: Transition.fade);
+                  print("result is $result");
+                  if (result != null && true) {
+                    _pagingController.refresh();
+                  }
+                },
+                child: CustomerListDetailsWidget(customerListItem: item));
+          },
+          noItemsFoundIndicatorBuilder: (context) => SizedBox(
+            width: 100.w,
+            height: 70.h,
+            child: const Center(
+              child: NoDataFound(
+                title: "No Data Found",
+                image: "assets/error_image/no_data.png",
+              ),
             ),
-          )),
-    ),
-  );
+          ),
+          firstPageErrorIndicatorBuilder: (context) => SizedBox(
+              height: 70.h,
+              child: const Center(
+                child: NoDataFound(
+                  title: "Something went wrong",
+                  image: "assets/error_image/error.png",
+                ),
+              )),
+        ),
+      );
 
   Future<SuperResponse<List<CustomerListItem>>?> _fetchPage(int pageNo) async {
-
     try {
       final response = await CustomerRepo.getCustomerList(
           pageNo.toString(),
@@ -193,7 +198,6 @@ class CustomerListPageState extends State<CustomerListPage> {
     return null;
   }
 
-
   void _initPageController() {
     _pagingController.addPageRequestListener((pageKey) async {
       if (await InternetUtil.isInternetConnected()) {
@@ -201,7 +205,6 @@ class CustomerListPageState extends State<CustomerListPage> {
       }
     });
   }
-
 
   void _addInternetConnectionListener() async {
     //if the internet is connected then make the api call
@@ -229,8 +232,6 @@ class CustomerListPageState extends State<CustomerListPage> {
     });
   }
 
-
-
   void applyFilter(List<dynamic> filterData) {
     _filterData = filterData;
     _pagingController.refresh(); // Refresh the data with the new filter
@@ -242,7 +243,4 @@ class CustomerListPageState extends State<CustomerListPage> {
       delegate: CustomerSearchDelegate(false),
     );
   }
-
-
-
 }
