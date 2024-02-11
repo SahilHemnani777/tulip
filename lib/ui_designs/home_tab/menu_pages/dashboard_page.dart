@@ -141,7 +141,7 @@ class DashBoardPageState extends State<DashBoardPage> {
                       );
                     });
                 if (result != null && result) {
-                  TourPlan? planId = await SessionManager.getTourPlanId(await SharedPreferences.getInstance());
+                  TourPlan? planId = await SessionManager.getTourPlanId();
                   if (planId == null) {
                     await SessionManager.userLogout();
                     context.pushAndRemoveUntil(const LoginPage());
@@ -383,41 +383,40 @@ class DashBoardPageState extends State<DashBoardPage> {
                   children: [
                     Spacer(),
                     const NoInternetWidget(),
-
-
                     Spacer(),
-                    if(!syncData)
+                    if (!syncData)
                       Container(
                         margin: EdgeInsets.symmetric(horizontal: 3.w),
-                        padding: EdgeInsets.symmetric(horizontal: 2.w,vertical: 1.h),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                                color: const Color(0xffC3C3C3)
-                                    .withOpacity(0.25),
-                                offset: const Offset(0, 1),
-                                spreadRadius: 0,
-                                blurRadius: 4)
-                          ]
-                        ),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 2.w, vertical: 1.h),
+                        decoration:
+                            BoxDecoration(color: Colors.white, boxShadow: [
+                          BoxShadow(
+                              color: const Color(0xffC3C3C3).withOpacity(0.25),
+                              offset: const Offset(0, 1),
+                              spreadRadius: 0,
+                              blurRadius: 4)
+                        ]),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-
-                            const Text("On Going Tour Plan",style: TextStyle(
-                              fontSize: 16,fontWeight: FontWeight.w600,
-                              color: Constants.primaryColor
-                            ),),
-
-
+                            const Text(
+                              "On Going Tour Plan",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Constants.primaryColor),
+                            ),
                             SizedBox(height: 1.h),
-                            tourFieldWidget("Activity Type",tourPlanId?.activityType?.activityTypeName ?? ""),
-                            tourFieldWidget("Area",tourPlanId?.area?.townName ?? ""),
-                            if(tourPlanId?.note !=null)
-                            tourFieldWidget("Comments",tourPlanId?.note ?? ""),
-
-
+                            tourFieldWidget(
+                                "Activity Type",
+                                tourPlanId?.activityType?.activityTypeName ??
+                                    ""),
+                            tourFieldWidget(
+                                "Area", tourPlanId?.area?.townName ?? ""),
+                            if (tourPlanId?.note != null)
+                              tourFieldWidget(
+                                  "Comments", tourPlanId?.note ?? ""),
                             GestureDetector(
                               onTap: () async {
                                 await backgroundService.initializeService();
@@ -428,15 +427,15 @@ class DashBoardPageState extends State<DashBoardPage> {
                                     locationController.latitude.value,
                                     locationController.longitude.value,
                                     locationController.currentAddress.value,
-                                    "Ended",await SharedPreferences.getInstance());
+                                    "Ended");
                                 syncData = await SessionManager.syncTourPlan();
 
                                 setState(() {});
-
                               },
                               child: Container(
                                 margin: EdgeInsets.symmetric(vertical: 0.6.h),
-                                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.6.h),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 2.w, vertical: 0.6.h),
                                 decoration: BoxDecoration(
                                     color: Constants.primaryColor,
                                     borderRadius: BorderRadius.circular(6)),
@@ -449,14 +448,13 @@ class DashBoardPageState extends State<DashBoardPage> {
                           ],
                         ),
                       ),
-
-
                   ],
                 ),
               ),
       ),
     );
   }
+
   Widget tourFieldWidget(String title, String details) => Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -468,18 +466,17 @@ class DashBoardPageState extends State<DashBoardPage> {
             ),
           ),
           Expanded(child: Text(details)),
-
         ],
       );
-
-
 
   Future<void> autoUpdate() async {
     print("version is checking object${packageInfo?.buildNumber}");
     print("object${settingDetails?.forceUpdateVersion}");
-    print("object${settingDetails?.forceUpdateVersion != packageInfo?.buildNumber}");
+    print(
+        "object${settingDetails?.forceUpdateVersion != packageInfo?.buildNumber}");
 
-    if (int.parse(settingDetails?.forceUpdateVersion ?? "0") > int.parse(packageInfo?.buildNumber ?? "0")) {
+    if (int.parse(settingDetails?.forceUpdateVersion ?? "0") >
+        int.parse(packageInfo?.buildNumber ?? "0")) {
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -510,20 +507,20 @@ class DashBoardPageState extends State<DashBoardPage> {
     if (response.status) {
       // TODO  save user data
       if (response.data != null) {
-        if(response.data?.status == "InActive"){
+        if (response.data?.status == "InActive") {
           await SessionManager.userLogout();
           context.pushAndRemoveUntil(const LoginPage());
           setState(() {});
-        }
-        else{
-        userDetails = response.data!;
-        await SessionManager.saveUserData(response.data!);
-        if (userDetails?.userAccess != null &&
-            userDetails!.userAccess!.contains("enable-screen-capture")) {
         } else {
-          await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-        }
-        setState(() {});
+          userDetails = response.data!;
+          await SessionManager.saveUserData(response.data!);
+          if (userDetails?.userAccess != null &&
+              userDetails!.userAccess!.contains("enable-screen-capture")) {
+          } else {
+            await FlutterWindowManager.addFlags(
+                FlutterWindowManager.FLAG_SECURE);
+          }
+          setState(() {});
         }
       } else {
         context.showSnackBar("Something went wrong", null);
@@ -542,7 +539,11 @@ class DashBoardPageState extends State<DashBoardPage> {
       // case "Job":
       //   break;
       case "FollowUp":
-      Navigator.push(context, MaterialPageRoute(builder: (_) => LeadDetailsPage(leadId: id,fromCreatePage: true)));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    LeadDetailsPage(leadId: id, fromCreatePage: true)));
     }
   }
 
@@ -592,7 +593,8 @@ class DashBoardPageState extends State<DashBoardPage> {
     var result = await ExpenseRepo.getSettingDetails();
     if (result.status) {
       settingDetails = result.data;
-      SessionManager.saveTimeInterval(settingDetails!.trackingInterval.toString());
+      SessionManager.saveTimeInterval(
+          settingDetails!.trackingInterval.toString());
       // Assign settingDetails to expenseDetails (if needed)
       // Check stationTypeName and update totalAllowance accordingly
       autoUpdate();
@@ -679,10 +681,9 @@ class DashBoardPageState extends State<DashBoardPage> {
     //if the internet is connected then make the api call
     if (!(await InternetUtil.isInternetConnected())) {
       _listenInternetConnection();
-      tourPlanId = await SessionManager.getTourPlanId(await SharedPreferences.getInstance());
+      tourPlanId = await SessionManager.getTourPlanId();
       syncData = await SessionManager.syncTourPlan();
       syncEndedTourPlanData();
-
 
       setState(() {
         _isInternetConnected = false;
@@ -698,22 +699,22 @@ class DashBoardPageState extends State<DashBoardPage> {
       syncEndedTourPlanData();
 
       Firebase.initializeApp();
-      NotificationService().init(onSelectNotification: (val){
-        print("notification selectedPageIndex in follow1");
-        if(val.payload!.contains("FollowUp")){
-          List<String> payloadParts = val.payload!.split(',');
-          String type = payloadParts[0];
-          String id = payloadParts[1];
-          print("notification selectedPageIndex in follow2");
-          appRedirection(type,id);
-        }else{
-          print("3notification selectedPageIndex in follow");
-          Map<String, dynamic> payloadMap = jsonDecode(val.payload!);
-          appRedirection(payloadMap['type'], payloadMap["_id"]);
-
-        }
-      }, notifyAppLaunch: (val){
-      });
+      NotificationService().init(
+          onSelectNotification: (val) {
+            print("notification selectedPageIndex in follow1");
+            if (val.payload!.contains("FollowUp")) {
+              List<String> payloadParts = val.payload!.split(',');
+              String type = payloadParts[0];
+              String id = payloadParts[1];
+              print("notification selectedPageIndex in follow2");
+              appRedirection(type, id);
+            } else {
+              print("3notification selectedPageIndex in follow");
+              Map<String, dynamic> payloadMap = jsonDecode(val.payload!);
+              appRedirection(payloadMap['type'], payloadMap["_id"]);
+            }
+          },
+          notifyAppLaunch: (val) {});
 
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         if (message != null) {
@@ -753,23 +754,21 @@ class DashBoardPageState extends State<DashBoardPage> {
     });
   }
 
-  void syncEndedTourPlanData()async {
+  void syncEndedTourPlanData() async {
     syncData = await SessionManager.syncTourPlan();
     print("Syncing data : $syncData");
-    if(syncData){
-      tourPlanId = await SessionManager.getTourPlanId(await SharedPreferences.getInstance());
+    if (syncData) {
+      tourPlanId = await SessionManager.getTourPlanId();
       await SessionManager.sendAndClearLocations(
-          tourPlanId!.id!, "Ended", context, await SharedPreferences.getInstance());
+          tourPlanId!.id!, "Ended", context);
       SharedPreferences sharedPreferences =
-      await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       sharedPreferences.remove("StopTourPlanNow");
       sharedPreferences.remove("activePlanId");
       print(tourPlanId);
       syncData = await SessionManager.syncTourPlan();
       setState(() {});
     }
-
-
   }
 
   Future<void> getLocation() async {

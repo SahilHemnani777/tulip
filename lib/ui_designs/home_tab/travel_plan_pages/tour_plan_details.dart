@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart' hide AndroidResource;
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tulip_app/constant/constant.dart';
@@ -39,7 +40,6 @@ class TourPlanDetailsPage extends StatefulWidget {
 }
 
 class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
-  SharedPreferences? sp;
   List<TourPlan> tourPlan = [];
   bool isEdit = false;
   Timer? locationUpdateTimer; // Declare a Timer variable
@@ -51,74 +51,90 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
 
   @override
   void initState() {
-    instantiateSharedPrefference();
     super.initState();
     backgroundService = BackgroundService();
     checkTourPlanActive();
     tourPlan = widget.tourPlanList;
     locationController.getLocation(context);
+    // print("Tour plan data :${widget.tourPlanList.first.toJson()}");
+    // print("Tour plan data :${widget.date != DateTime.now()}");
   }
 
-  instantiateSharedPrefference() {
-    SharedPreferences.getInstance().then((value) {
-      setState(() {
-        sp = value;
-      });
-    });
-  }
+  // @pragma('vm:entry-point')
+  // @override
+  // Future<void> didChangeDependencies() async {
+  //   await locationController.notificationService.initialize(context);
+  //
+  //   //Start the service automatically if it was activated before closing the application
+  //   if (await backgroundService.instance.isRunning()) {
+  //     await backgroundService.initializeService();
+  //   }
+  //   backgroundService.instance.on('on_location_changed').listen((event) async {
+  //     if (event != null) {
+  //       final position = Position(
+  //         longitude: double.tryParse(event['longitude'].toString()) ?? 0.0,
+  //         latitude: double.tryParse(event['latitude'].toString()) ?? 0.0,
+  //         timestamp: DateTime.fromMillisecondsSinceEpoch(
+  //             event['timestamp'].toInt(),
+  //             isUtc: true),
+  //         accuracy: double.tryParse(event['accuracy'].toString()) ?? 0.0,
+  //         altitude: double.tryParse(event['altitude'].toString()) ?? 0.0,
+  //         heading: double.tryParse(event['heading'].toString()) ?? 0.0,
+  //         speed: double.tryParse(event['speed'].toString()) ?? 0.0,
+  //         speedAccuracy:
+  //         double.tryParse(event['speed_accuracy'].toString()) ?? 0.0, altitudeAccuracy: 0, headingAccuracy: 0,
+  //       );
+  //
+  //     }
+  //   });
+  //   super.didChangeDependencies();
+  // }
 
   Future<void> checkTourPlanActive() async {
-    TourPlan? planId = await SessionManager.getTourPlanId(sp!);
+    TourPlan? planId = await SessionManager.getTourPlanId();
     if (planId != null) {
       isPlanActive = true;
     } else {
       isPlanActive = false;
     }
+    print("is plan active ${isPlanActive}");
     setState(() {});
   }
 
   Future<void> _startPeriodicTask(TourPlan tourPlan) async {
     // Store tourPlanId in SharedPreferences
-    await backgroundService.initializeService(); // it will keep app start
+    await backgroundService.initializeService();
     //Set service as foreground.(Notification will available till the service end)
-    // backgroundService.setServiceAsForeGround(); //
-    await backgroundService.initializeService(); //
-
-    
-    SessionManager.storeTourPlanId(tourPlan, sp!);
-    sp!.remove("offlineLocations");
-    sp!.remove("locations2");
+    backgroundService.setServiceAsForeGround();
+    await backgroundService.initializeService();
+    await SessionManager.deleteFile();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    SessionManager.storeTourPlanId(tourPlan);
+    prefs.remove("offlineLocations");
+    print("Plan Started");
   }
 
   Future<void> _stopPeriodicTask(String currentStatus) async {
+    locationUpdateTimer?.cancel(); // Cancel the Timer if it's not null
+    backgroundService.stopService();
+
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    TourPlan? tourPlanId = await SessionManager.getTourPlanId(sp!);
+    TourPlan? tourPlanId = await SessionManager.getTourPlanId();
+
     // Get the latest location details
     locationController.getLocation(context);
+
     // Store the latest location with the current status
     await SessionManager.storeLocationOffline(
       locationController.latitude.value,
       locationController.longitude.value,
       locationController.currentAddress.value,
       currentStatus, // Pass the current status here
-      sp!
     );
-    // Map<String, dynamic> locationData = {
-    //   "type": "Point",
-    //   "status": currentStatus, // Replace with your status value
-    //   "address": locationController.currentAddress.value,
-    //   "coordinates": [
-    //     locationController.latitude.value,
-    //     locationController.longitude.value
-    //   ]
-    // };
-    // print("Last Location Data${locationData}");
+
     // Send and clear locations with the latest location and status
     if (tourPlanId?.id != null && tourPlanId!.id!.isNotEmpty) {
-      await SessionManager.sendAndClearLocations(
-          tourPlanId.id!, currentStatus, context, sp!);
-      // await SessionManager.sendAndClearLocations2(
-      //     tourPlanId.id!, currentStatus, context, locationData);
+      await SessionManager.sendAndClearLocations(tourPlanId!.id!, currentStatus, context);
       if (currentStatus == "Ended") {
         prefs.remove("activePlanId");
         prefs.remove("StopTourPlanNow");
@@ -126,10 +142,8 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
       checkTourPlanActive();
     } else {
       context.showSnackBar(
-          "TourPlan plan data not found, Kindly check if started on other device.",
-          null);
+          "TourPlan plan data not found, Kindly check if started on other device.", null);
     }
-    backgroundService.stopService();
   }
 
   @override
@@ -195,15 +209,8 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
     );
   }
 
-  Widget tourFieldWidget(
-          String title,
-          String details,
-          bool isEditable,
-          Function()? onTap,
-          Function()? editTap,
-          bool? isDeviation,
-          String? status,
-          Function()? addDeviation) =>
+  Widget tourFieldWidget(String title, String details, bool isEditable, Function()? onTap,
+          Function()? editTap, bool? isDeviation, String? status, Function()? addDeviation) =>
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -219,11 +226,9 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
             GestureDetector(
               onTap: onTap,
               child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
+                  padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
                   decoration: BoxDecoration(
-                      color: Constants.primaryColor,
-                      borderRadius: BorderRadius.circular(7)),
+                      color: Constants.primaryColor, borderRadius: BorderRadius.circular(7)),
                   child: Icon(
                     Icons.delete,
                     size: 18,
@@ -235,11 +240,9 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
               onTap: editTap,
               child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 2.w),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
-                  decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(7)),
+                  padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
+                  decoration:
+                      BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(7)),
                   child: const Icon(
                     Icons.edit,
                     size: 18,
@@ -257,11 +260,9 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
               onTap: addDeviation,
               child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 2.w),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
-                  decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(7)),
+                  padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
+                  decoration:
+                      BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(7)),
                   child: const Text(
                     "Add Deviation",
                     style: TextStyle(color: Colors.white, fontSize: 12),
@@ -329,11 +330,11 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                     getTourPlanData(result[0], result[1]);
                   }
                 }),
-            tourFieldWidget("Area", tourPlanData.area?.townName ?? "", false,
-                () {}, () {}, null, null, () {}),
+            tourFieldWidget(
+                "Area", tourPlanData.area?.townName ?? "", false, () {}, () {}, null, null, () {}),
             if (tourPlanData.note != null && tourPlanData.note!.isNotEmpty)
-              tourFieldWidget("Comment", tourPlanData.note ?? "", false, () {},
-                  () {}, null, null, () {}),
+              tourFieldWidget(
+                  "Comment", tourPlanData.note ?? "", false, () {}, () {}, null, null, () {}),
             if (tourPlanData.deviatedVisitId?.area?.townName != null)
               Align(
                 alignment: Alignment.center,
@@ -342,9 +343,7 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                       ? "Deviation: To ${tourPlanData.deviatedVisitId?.area?.townName}"
                       : "Deviation: From ${tourPlanData.deviatedVisitId?.area?.townName ?? ""}",
                   style: const TextStyle(
-                      color: Constants.primaryColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600),
+                      color: Constants.primaryColor, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             if (widget.status == "Approved" && !tourPlanData.isDeviation)
@@ -357,10 +356,8 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                             ? () async {
                                 if (tourPlanData.status == "Created") {
                                   locationController.getLocation(context);
-                                  print(
-                                      locationController.getLocation(context));
-                                  await updateTourPlanStatus(tourPlanData.id!,
-                                      "Started", tourPlanData.tourPlanId!);
+                                  await updateTourPlanStatus(
+                                      tourPlanData.id!, "Started", tourPlanData.tourPlanId!);
                                   _startPeriodicTask(tourPlanData);
                                   isPlanActive = true;
                                   setState(() {});
@@ -385,27 +382,24 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                             tourPlanData.status!)),
                   if (tourPlanData.status == "Started" ||
                       tourPlanData.status == "Paused" ||
-                      tourPlanData.status == "Resumed" &&
-                          tourPlanData.status != "Ended")
+                      tourPlanData.status == "Resumed" && tourPlanData.status != "Ended")
                     GestureDetector(
                         onTap: () async {
                           if (tourPlanData.status == "Created") {
                             locationController.getLocation(context);
-                            await updateTourPlanStatus(tourPlanData.id!,
-                                "Started", tourPlanData.tourPlanId!);
+                            await updateTourPlanStatus(
+                                tourPlanData.id!, "Started", tourPlanData.tourPlanId!);
                             await _startPeriodicTask(tourPlanData);
                           } else if (tourPlanData.status == "Started") {
                             await _stopPeriodicTask("Paused");
-                            getTourPlanData(
-                                tourPlanData.tourPlanId!, widget.date);
+                            getTourPlanData(tourPlanData.tourPlanId!, widget.date);
                           } else if (tourPlanData.status == "Paused") {
-                            await updateTourPlanStatus(tourPlanData.id!,
-                                "Resumed", tourPlanData.tourPlanId!);
+                            await updateTourPlanStatus(
+                                tourPlanData.id!, "Resumed", tourPlanData.tourPlanId!);
                             await _startPeriodicTask(tourPlanData);
                           } else if (tourPlanData.status == "Resumed") {
                             await _stopPeriodicTask("Paused");
-                            getTourPlanData(
-                                tourPlanData.tourPlanId!, widget.date);
+                            getTourPlanData(tourPlanData.tourPlanId!, widget.date);
                           }
                         },
                         child: startEndButtonWidget(
@@ -431,8 +425,7 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                         onTap: () async {
                           if (await InternetUtil.isInternetConnected()) {
                             await _stopPeriodicTask("Ended");
-                            getTourPlanData(
-                                tourPlanData.tourPlanId!, widget.date);
+                            getTourPlanData(tourPlanData.tourPlanId!, widget.date);
                           } else {
                             await backgroundService.initializeService();
                             backgroundService.stopService();
@@ -442,15 +435,14 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
                                 locationController.latitude.value,
                                 locationController.longitude.value,
                                 locationController.currentAddress.value,
-                                "Ended", sp!);
+                                "Ended");
                             Get.off(const DashBoardPage());
                           }
                         },
-                        child: startEndButtonWidget("End Tour Plan",
-                            Constants.primaryColor, tourPlanData.status!)),
+                        child: startEndButtonWidget(
+                            "End Tour Plan", Constants.primaryColor, tourPlanData.status!)),
                   if (tourPlanData.status == "Ended")
-                    startEndButtonWidget(
-                        "Completed", Colors.green, tourPlanData.status!)
+                    startEndButtonWidget("Completed", Colors.green, tourPlanData.status!)
                 ],
               ),
             const Divider(
@@ -463,14 +455,12 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  Widget startEndButtonWidget(String title, Color color, String status) =>
-      Container(
+  Widget startEndButtonWidget(String title, Color color, String status) => Container(
         margin: EdgeInsets.symmetric(vertical: 0.6.h),
         padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.6.h),
         decoration: BoxDecoration(
             color: (status == "Ended") ||
-                    ((status == "Created") &&
-                        !isSameDate(widget.date, DateTime.now()))
+                    ((status == "Created") && !isSameDate(widget.date, DateTime.now()))
                 ? Colors.grey
                 : color,
             borderRadius: BorderRadius.circular(6)),
@@ -500,8 +490,7 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
   }
 
   Future<void> getTourPlanData(String tourPlanId, DateTime date) async {
-    var response =
-        await TourMasterRepo.getTourPlanListByUserId(tourPlanId, date);
+    var response = await TourMasterRepo.getTourPlanListByUserId(tourPlanId, date);
     try {
       if (response.status) {
         if (response.data != null) {
@@ -522,8 +511,7 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
     }
   }
 
-  Future<void> updateTourPlanStatus(
-      String id, String status, String tourPlanId) async {
+  Future<void> updateTourPlanStatus(String id, String status, String tourPlanId) async {
     if (await InternetUtil.isInternetConnected()) {
       try {
         Map<String, dynamic> body = {
@@ -533,21 +521,13 @@ class TourPlanDetailsPageState extends State<TourPlanDetailsPage> {
               "type": "Point",
               "status": status,
               "address": locationController.currentAddress.value,
-              "coordinates": [
-                locationController.latitude.value,
-                locationController.longitude.value
-              ]
+              "coordinates": [locationController.latitude.value, locationController.longitude.value]
             }
           ]
         };
-        print("-------------------");
-        print(body);
-        print("-------------------");
+
         ProgressDialog.showProgressDialog(context);
         var response = await TourMasterRepo.updateTourPlanStatus(body);
-        print("-------------------");
-        print(response);
-        print("-------------------");
         if (response.status) {
           Get.back();
           getTourPlanData(tourPlanId, widget.date);
