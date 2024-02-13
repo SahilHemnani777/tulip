@@ -79,7 +79,7 @@ class DailyTourPlanListState extends State<DailyTourPlanList> {
               "${getMonthName(widget.tourPlanDate.month)} ${widget.tourPlanDate.year}",
           implyStatus: true,
           actions: [
-            isSubmited == false
+            widget.status == "Pending" && isSubmited == false
                 ? Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.2.h),

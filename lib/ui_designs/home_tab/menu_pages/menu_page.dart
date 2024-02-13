@@ -116,7 +116,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 });
 
                 if(data !=null && data){
-                  TourPlan? planId = await SessionManager.getTourPlanId(await SharedPreferences.getInstance());
+                  TourPlan? planId = await SessionManager.getTourPlanId();
                   if(planId ==null) {
                     await SessionManager.userLogout();
                     context.pushAndRemoveUntil(const LoginPage());

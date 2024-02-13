@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:developer';
-
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:tulip_app/dialog/progress_dialog.dart';
@@ -41,8 +41,7 @@ class SessionManager {
     if (headers.containsKey('set-cookie')) {
       final setCookieValue = headers['set-cookie'];
       // If the "set-cookie" header is a list, you may want to join the values into a single string.
-      final userCookie =
-          setCookieValue is List ? setCookieValue.join('; ') : setCookieValue;
+      final userCookie = setCookieValue is List ? setCookieValue.join('; ') : setCookieValue;
 
       await pref.setString(optCookies, userCookie);
     }
@@ -80,8 +79,7 @@ class SessionManager {
 
   static Future<UserDetails> getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> userMap =
-        json.decode(prefs.getString(USER_DATA_INFO) ?? '');
+    Map<String, dynamic> userMap = json.decode(prefs.getString(USER_DATA_INFO) ?? '');
     UserDetails userDataInfo = UserDetails.fromJson(userMap);
     return userDataInfo;
   }
@@ -110,7 +108,7 @@ class SessionManager {
   static Future<String> getTimeInterval() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String time = pref.getString(timeInterval) ?? "";
-    return time;
+    return "15";
   }
 
   //get user login - userid
@@ -121,43 +119,35 @@ class SessionManager {
   }
 
   static Future<void> storeLocationOffline(
-      String latitude, String longitude, String address, String status, SharedPreferences prefs) async {
-    
-    List<String> locations = prefs.getStringList(OFFLINE_LOCATIONS_KEY) ?? [];
-    List<String> locations2 = prefs.getStringList("locations2") ?? [];
-    print("location pehle are: $locations");
+      String latitude, String longitude, String address, String status) async {
+    print("New Lat and long $latitude and $longitude status :  $status address : $address");
+    print("new Current time is : ${DateTime.now()}");
+
     Map<String, dynamic> locationData = {
       "type": "Point",
       "status": status, // Replace with your status value
       "address": address,
       "coordinates": [latitude, longitude]
     };
-    locations.add(json.encode(locationData));
-    locations2.add(json.encode(locationData));
-    print("locations are now: ${locations.length}");
-    await prefs.setStringList(OFFLINE_LOCATIONS_KEY, locations);
-    await prefs.setStringList("locatoins2", locations2);
+
+    await writeToFile(locationData);
   }
 
   static Future<void> sendAndClearLocations(
-      String tourPlanId, String currentStatus, BuildContext context, SharedPreferences prefs) async {
-    List<String> storedLocations2 =
-        prefs.getStringList("locations2") ?? [];
-    print("iiiiiiiiiiiiiiiiiiiiiiiiii");
-    print(storedLocations2.length);
-    print("iiiiiiiiiiiiiiiiiiiiiiiiii");
+      String tourPlanId, String currentStatus, BuildContext context) async {
+    List<dynamic> storedLocations = await readFile();
+
+    print('stored location is now $storedLocations');
 
     // Check if there are any stored locations
-    if (storedLocations2.isNotEmpty) {
+    if (storedLocations.isNotEmpty) {
       // Prepare a list of locations to be sent
       List<Map<String, dynamic>> locationsToSend = [];
 
-      for (String locationJson in storedLocations2) {
-        print("Stored data value is this $locationJson");
-        Map<String, dynamic> locationMap = json.decode(locationJson);
-        locationsToSend.add(locationMap);
-      }
-      print("ye api me ja rahi hai: $locationsToSend");
+      storedLocations.forEach((element) {
+        locationsToSend.add(element);
+      });
+
       // Construct the body with the tourPlanVisitId and the array of geoLocations
       Map<String, dynamic> body = {
         "tourPlanVisitId": tourPlanId,
@@ -172,8 +162,9 @@ class SessionManager {
             Get.back();
             // Here, you can send the data to the API using the `body` map
             print("Completed location tracked data ${jsonEncode(body)}");
+            context.showSnackBar("Status Updated Successfully", null);
             // Clear the stored locations after sending them
-            await prefs.remove(OFFLINE_LOCATIONS_KEY);
+            await deleteFile();
           } else {
             Get.back();
             context.showSnackBar("Something went wrong", null);
@@ -187,20 +178,15 @@ class SessionManager {
       }
     }
   }
-   
 
-
-  static Future<void> storeTourPlanId(TourPlan tourPlan, SharedPreferences prefs) async {
-    
+  static Future<void> storeTourPlanId(TourPlan tourPlan) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     final tourJson = jsonEncode(tourPlan.toJson());
     await prefs.setString(storedTourPlanID, tourJson);
-    print("-------------------");
-    print(prefs.get(storedTourPlanID));
-    print("-------------------");
   }
 
-  static Future<TourPlan?> getTourPlanId(SharedPreferences pref) async {
-    
+  static Future<TourPlan?> getTourPlanId() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
     String? storedJson = pref.getString(storedTourPlanID);
 
     if (storedJson != null && storedJson.isNotEmpty) {
@@ -216,5 +202,53 @@ class SessionManager {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     FirebaseMessaging.instance.subscribeToTopic("all");
     await sharedPreferences.clear();
+  }
+
+  // static Future<List<String>> readFile() async {
+  //   Directory tempDir = await getTemporaryDirectory();
+  //   File file = File('${tempDir.path}/locations.txt');
+  //   if (!(await file.exists())) {
+  //     await file.create();
+  //   }
+  //   String out = await file.readAsString();
+  //   try {
+  //     return json.decode(out);
+  //   } catch (e) {
+  //     return [];
+  //   }
+  // }
+
+  static Future writeToFile(Map jsonData) async {
+    print('writing line $json');
+    Directory tempDir = await getTemporaryDirectory();
+    File file = File('${tempDir.path}/locations.txt');
+    if (!(await file.exists())) {
+      await file.create();
+      file.writeAsStringSync('[]');
+    }
+
+    List<dynamic> dataInFile = await readFile();
+    dataInFile.add(jsonData);
+
+    return file.writeAsString(json.encode(dataInFile));
+  }
+
+  static Future<List<dynamic>> readFile() async {
+    Directory tempDir = await getTemporaryDirectory();
+    File file = File('${tempDir.path}/locations.txt');
+    if (!(await file.exists())) {
+      await file.create();
+      file.writeAsStringSync('[]');
+    }
+    print(json.decode(await file.readAsString()));
+    return json.decode(await file.readAsString());
+  }
+
+  static Future deleteFile() async {
+    Directory tempDir = await getTemporaryDirectory();
+    File file = File('${tempDir.path}/locations.txt');
+    if ((await file.exists())) {
+      return file.delete();
+    }
   }
 }

@@ -6,7 +6,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tulip_app/util/notifications_util.dart';
 import 'package:tulip_app/util/session_manager.dart';
 
@@ -32,6 +31,7 @@ void onStart(ServiceInstance service) async {
     });
 
     service.on('setAsBackground').listen((event) async {
+      print("On started methods call 2");
       await service.setAsBackgroundService();
     });
   }
@@ -40,9 +40,8 @@ void onStart(ServiceInstance service) async {
     await service.stopSelf();
   });
 
-  print("Interval time is : ${int.parse(time)}");
-
-  Timer.periodic(Duration(seconds: 10), (timer) async {
+  
+  Timer.periodic(Duration(minutes: int.parse(time)), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         final Position position = await Geolocator.getCurrentPosition(
@@ -63,19 +62,11 @@ void onStart(ServiceInstance service) async {
           }
 
           await SessionManager.storeLocationOffline(
-              position.latitude.toString(),
-              position.longitude.toString(),
-              address,
-              "Fetched", await SharedPreferences.getInstance());
-          print(
-              "stored a new location: ${position.latitude.toString()} --- ${position.longitude.toString()}");
+              position.latitude.toString(), position.longitude.toString(), address, "Fetched");
         } catch (e) {
           // Handle the case where address information is not found
-          await SessionManager.storeLocationOffline(
-              position.latitude.toString(),
-              position.longitude.toString(),
-              'Address not available',
-              'Fetched', await SharedPreferences.getInstance());
+          await SessionManager.storeLocationOffline(position.latitude.toString(),
+              position.longitude.toString(), 'Address not available', 'Fetched');
         }
       }
     }
@@ -84,14 +75,13 @@ void onStart(ServiceInstance service) async {
 
 class BackgroundService {
   //Get instance for flutter background service plugin
-  final FlutterBackgroundService flutterBackgroundService =
-      FlutterBackgroundService();
+  final FlutterBackgroundService flutterBackgroundService = FlutterBackgroundService();
 
   FlutterBackgroundService get instance => flutterBackgroundService;
 
   Future<void> initializeService() async {
-    await NotificationService().createChannel(const AndroidNotificationChannel(
-        notificationChannelId, notificationChannelId));
+    await NotificationService().createChannel(
+        const AndroidNotificationChannel(notificationChannelId, notificationChannelId));
     await flutterBackgroundService.configure(
       androidConfiguration: AndroidConfiguration(
         // this will be executed when app is in foreground or background in separated isolate

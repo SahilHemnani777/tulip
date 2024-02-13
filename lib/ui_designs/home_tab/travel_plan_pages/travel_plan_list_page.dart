@@ -21,7 +21,9 @@ import 'tour_filter_page.dart';
 class TravelPlanListPage extends StatefulWidget {
   final String latitude;
   final String longitude;
-  const TravelPlanListPage({Key? key, required this.latitude, required this.longitude}) : super(key: key);
+  const TravelPlanListPage(
+      {Key? key, required this.latitude, required this.longitude})
+      : super(key: key);
 
   @override
   _TravelPlanListPageState createState() => _TravelPlanListPageState();
@@ -131,17 +133,18 @@ class _TravelPlanListPageState extends State<TravelPlanListPage> {
                                               onTap: () async {
                                                 var result = await Get.to(
                                                     DailyTourPlanList(
-                                                      tourPlanId:
-                                                          tourPlanData[index]
-                                                              .id,
-                                                      tourPlanDate:
-                                                          tourPlanData[index]
-                                                              .date!,
-                                                      status: tourPlanData[index].status!
-                                                    ),
+                                                        tourPlanId:
+                                                            tourPlanData[index]
+                                                                .id,
+                                                        tourPlanDate:
+                                                            tourPlanData[index]
+                                                                .date!,
+                                                        status:
+                                                            tourPlanData[index]
+                                                                .status!),
                                                     transition:
                                                         Transition.fade);
-                                                if(result!=null && result){
+                                                if (result != null && result) {
                                                   tourPlanData.clear();
                                                   getTourPlanData();
                                                 }
@@ -185,7 +188,10 @@ class _TravelPlanListPageState extends State<TravelPlanListPage> {
             var result = await showDialog(
                 context: context,
                 builder: (_) {
-                  return AddTourYearDialog(latitude: widget.longitude,longitude: widget.longitude,);
+                  return AddTourYearDialog(
+                    latitude: widget.longitude,
+                    longitude: widget.longitude,
+                  );
                 });
 
             if (result != null) {
@@ -308,9 +314,9 @@ class _TravelPlanListPageState extends State<TravelPlanListPage> {
                   _travelPlanTextWidget("assets/other_images/holiday_icon.png",
                       "Total Holidays", item.totalHolidays.toString(), ""),
                   SizedBox(height: 1.5.h),
-                  if(item.notes!=null && item.notes!.isNotEmpty)
-                  _travelPlanTextWidget("assets/other_images/note_icon.png",
-                      "Note", item.notes ?? "", ""),
+                  if (item.notes != null && item.notes!.isNotEmpty)
+                    _travelPlanTextWidget("assets/other_images/note_icon.png",
+                        "Note", item.notes ?? "", ""),
                 ],
               ),
             )
@@ -366,9 +372,8 @@ class _TravelPlanListPageState extends State<TravelPlanListPage> {
         _isLoading = false;
         setState(() {});
       }
-    }
-    else{
-      context.showSnackBar("Something went wrong",null);
+    } else {
+      context.showSnackBar("Something went wrong", null);
     }
   }
 
