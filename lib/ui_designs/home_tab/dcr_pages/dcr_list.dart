@@ -233,15 +233,15 @@ class _DCRListPageState extends State<DCRListPage> {
                         fontWeight: FontWeight.w600,
                         color: Colors.red),
                   ),
-                  if (item.isExpenses && item.expenseId?.createdAt != null)
-                    Expanded(
-                        child: Text(
-                      "(${DateUtil.getDisplayFormatDate(item.expenseId!.createdAt!)})",
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )),
+                  // if (item.isExpenses && item.expenseId?.createdAt != null)
+                  //   Expanded(
+                  //       child: Text(
+                  //     "(${DateUtil.getDisplayFormatDate(item.expenseId!.createdAt!)})",
+                  //     style: const TextStyle(
+                  //       fontSize: 13,
+                  //       fontWeight: FontWeight.w600,
+                  //     ),
+                  //   )),
                 ],
               ),
             ),
