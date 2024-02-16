@@ -60,7 +60,7 @@ class LabListPageState extends State<LabListPage> {
             shrinkWrap: true,
             itemBuilder: (context,index){
               DCRLogReportsModel item=dcrLogList[index];
-          return SessionManager.userDesignation == "Service Engineer"  ? salesVisitListItem(item) : customerVisitListItem(item);
+          return SessionManager.userDesignation == "Sr. Sales & Service Executive" || SessionManager.userDesignation == "Sales & Service Executive" ? salesVisitListItem(item) : customerVisitListItem(item);
         }): const Center(child: NoDataFound()):const Center(child: CircularProgressIndicator.adaptive(),),
 
 
