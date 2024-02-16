@@ -113,7 +113,7 @@ class _AddAreaReportFormState extends State<AddAreaReportForm> {
       body: Container(
         margin: EdgeInsets.symmetric(horizontal: 4.w),
         child: SingleChildScrollView(
-          child: SessionManager.userDesignation == "Service Engineer" ?
+          child: SessionManager.userDesignation == "Sales & Service Executive" || SessionManager.userDesignation == "Sr. Sales & Service Executive"  ?
           SEAddCallReportPage(dcrReport: dcrReport,dcrLogId: widget.dcrLogId, tourPlanVisitId: widget.tourPlanVisitId,
               areaName: widget.areaName ?? "",dcrId: widget.dcrId,isExpenseCreated: widget.isExpenseCreated) :
           Column(
