@@ -13,11 +13,9 @@ import 'package:tulip_app/model/super_response.dart';
 import 'package:tulip_app/util/fetch_util_ext.dart';
 import 'package:tulip_app/util/session_manager.dart';
 
-class LoginMaster{
-
-
-  static Future<SuperResponse<CheckUserExists?>> checkUserExists(String mobileNumber,String emailId) async {
-
+class LoginMaster {
+  static Future<SuperResponse<CheckUserExists?>> checkUserExists(
+      String mobileNumber, String emailId) async {
     Map<String, dynamic> body = {
       'companyMobileNo': mobileNumber,
       'loginEmailId': emailId
@@ -31,14 +29,13 @@ class LoginMaster{
     if (data['status']) {
       CheckUserExists checkUser = CheckUserExists.fromJson(data['data']);
       return SuperResponse.fromJson(data, checkUser);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, null);
     }
   }
 
-  static Future<SuperResponse<LoginData?>> checkUserLogin(String userId, String password) async {
-
+  static Future<SuperResponse<LoginData?>> checkUserLogin(
+      String userId, String password) async {
     // final deviceId = await DeviceInfoUtils.getdeviceId();
     // String? deviceName = await DeviceInfoUtils.getDeviceName();
 
@@ -59,13 +56,10 @@ class LoginMaster{
       FirebaseMessaging.instance.subscribeToTopic("all");
 
       return SuperResponse.fromJson(data, checkUserLoginResponse);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, null);
     }
   }
-
-
 
   static Future<SuperResponse> sendOTP(String userId) async {
     Map<String, dynamic> body = {
@@ -76,15 +70,12 @@ class LoginMaster{
 
     if (data['status']) {
       return SuperResponse.fromJson(data, data['data']['_id']);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, data['message']);
     }
   }
 
-
-  static Future<SuperResponse> verifyOTP(String code,String userId) async {
-
+  static Future<SuperResponse> verifyOTP(String code, String userId) async {
     Map<String, dynamic> body = {
       'otp': code,
       'userId': userId,
@@ -94,14 +85,13 @@ class LoginMaster{
 
     if (data['status']) {
       return SuperResponse.fromJson(data, data['status']);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, data['message']);
     }
   }
 
-  static Future<SuperResponse<CheckUserExists?>> forgotPassword(String mobileNumber,String emailId) async {
-
+  static Future<SuperResponse<CheckUserExists?>> forgotPassword(
+      String mobileNumber, String emailId) async {
     Map<String, dynamic> body = {
       'companyMobileNo': mobileNumber,
       'loginEmailId': emailId
@@ -109,26 +99,20 @@ class LoginMaster{
 
     //extra header
     ///upsertHeader("os", 'iOS');
-
+    print("object");
     var data = await "app/forgotPassword".post(body: body);
-
+    print("data andar aake" + data.toString());
     if (data['status']) {
       CheckUserExists checkUser = CheckUserExists.fromJson(data['data']);
       return SuperResponse.fromJson(data, checkUser);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, null);
     }
   }
 
-
-
-  static Future<SuperResponse> resetPassword(String userId,String password) async {
-
-    Map<String, dynamic> body = {
-      'userId': userId,
-      'password': password
-    };
+  static Future<SuperResponse> resetPassword(
+      String userId, String password) async {
+    Map<String, dynamic> body = {'userId': userId, 'password': password};
     //extra header
     ///upsertHeader("os", 'iOS');
 
@@ -136,9 +120,7 @@ class LoginMaster{
     return SuperResponse.fromJson(data, data['status']);
   }
 
-
   static Future<SuperResponse<UserDetails?>> getUserInfo() async {
-
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String userId = await SessionManager.getUserId();
     String? fcmToken = await FirebaseMessaging.instance.getToken();
@@ -148,46 +130,43 @@ class LoginMaster{
     final deviceId = await DeviceInfoUtils.getdeviceId();
     String? deviceName = await DeviceInfoUtils.getDeviceName();
 
-    Map<String,dynamic> body = {
-    "userId": userId,
-    "deviceId": deviceId,
-      "os": kIsWeb ? "web" : Platform.isIOS ? "ios" : "android",
+    Map<String, dynamic> body = {
+      "userId": userId,
+      "deviceId": deviceId,
+      "os": kIsWeb
+          ? "web"
+          : Platform.isIOS
+              ? "ios"
+              : "android",
       "app_version": appVersion.toString(),
-    "deviceName": deviceName,
+      "deviceName": deviceName,
       "fcmToken": fcmToken.toString(),
     };
 
-
     var data = await "app/getUserDetails".post(body: body);
 
-    if(data['status']) {
+    if (data['status']) {
       UserDetails userDataInfo = UserDetails.fromJson(data['data']);
       return SuperResponse.fromJson(data, userDataInfo);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, null);
     }
   }
 
-
-
   static Future<SuperResponse<List<UserDetails>?>> getActiveUserInfo() async {
-
-    String userId= await SessionManager.getUserId();
+    String userId = await SessionManager.getUserId();
 
     var data = await "app/getActiveUsers?$userId".get();
 
     debugPrint("Result Data${data.toString()}");
     log("User Data is :${jsonEncode(data)}");
-    if(data['status']) {
-      Iterable dataList= data['data'];
-      List<UserDetails> userDataInfo = dataList.map((e) => UserDetails.fromJson(e)).toList();
+    if (data['status']) {
+      Iterable dataList = data['data'];
+      List<UserDetails> userDataInfo =
+          dataList.map((e) => UserDetails.fromJson(e)).toList();
       return SuperResponse.fromJson(data, userDataInfo);
-    }
-    else {
+    } else {
       return SuperResponse.fromJson(data, null);
     }
   }
-
-
 }
