@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class Constants{
-
-
+class Constants {
   //DEV
   // static const String baseUrl = "http://15.207.24.41:4000/";
   // static const String baseUrl = "http://15.207.24.41:3001/";
   // static const String baseUrl = "http://192.168.1.21:3001/";
-
 
   //PROD
   static const String baseUrl = "https://admin.tulipdiagnostics.in/";
@@ -20,18 +17,11 @@ class Constants{
   static Color black = Colors.black;
   static Color lightGreyBorderColor = Colors.black.withOpacity(0.10);
 
-
-
   //Color Gradient
-  static const Gradient buttonGradientColor=LinearGradient(
-      colors: [
-        Color(0xffE30016),
-        Color(0xffA12B2E),
-      ]
-  );
-
-
-
+  static const Gradient buttonGradientColor = LinearGradient(colors: [
+    Color(0xffE30016),
+    Color(0xffA12B2E),
+  ]);
 
   static void launchPhone(String phoneNumber) async {
     final url = 'tel:$phoneNumber';
@@ -41,6 +31,7 @@ class Constants{
       throw 'Could not launch $url';
     }
   }
+
   static void launchWhatsApp(String phoneNumber) async {
     final url = Uri.parse('https://wa.me/$phoneNumber');
     if (await canLaunchUrl(url)) {
@@ -50,11 +41,12 @@ class Constants{
     }
   }
 
-  static Future<DateTime?> pickDate(DateTime firstDate, DateTime lastDate,BuildContext context) async {
+  static Future<DateTime?> pickDate(
+      DateTime firstDate, DateTime lastDate, BuildContext context) async {
     final res = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: firstDate, 
+      firstDate: firstDate,
       lastDate: lastDate,
     );
     if (res != null) {
@@ -74,9 +66,8 @@ class Constants{
         );
       },
       opaque: false, // Set to false to make the page transparent
-      barrierColor: Colors.black.withOpacity(0.5), // Set the color of the barrier if needed
+      barrierColor: Colors.black
+          .withOpacity(0.5), // Set the color of the barrier if needed
     );
   }
-
-
 }
